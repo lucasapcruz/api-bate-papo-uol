@@ -93,7 +93,7 @@ app.post("/messages", async (req, res) => {
     const isNotValidBody = messageSchema.validate(receivedMessage).error
     const isNotActiveParticipant = await db.collection("participants").findOne({ name: participant }).error
     const isNotValidMessage = isNotValidBody || isNotActiveParticipant
-    
+
     if (isNotValidMessage) {
         res.sendStatus(422)
     }
@@ -107,6 +107,38 @@ app.post("/messages", async (req, res) => {
     try {
         await db.collection("participants").insertOne(message)
         res.sendStatus(201)
+    } catch (error) {
+        res.sendStatus(500)
+    }
+})
+
+app.get("/messages", async (req, res) => {
+    const limit = req.params.limit
+    const participant = req.headers.User
+
+    try {
+        if (limit) {
+            const messages = await db.collection("messages").find(
+                {
+                    $or: [{ to: participant }, { from: participant }]
+                }
+            )
+            .sort({ time: -1 })
+            .limit(limit)
+            .toArray()
+            res.status(200).send(messages)
+            return
+        }
+
+        const messages = await db.collection("messages").find(
+            {
+                $or: [{ to: participant }, { from: participant }]
+            }
+        )
+        .sort({ time: -1 })
+        .toArray()
+        res.status(200).send(messages)
+
     } catch (error) {
         res.sendStatus(500)
     }
