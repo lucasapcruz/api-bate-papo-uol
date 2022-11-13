@@ -96,6 +96,7 @@ app.post("/messages", async (req, res) => {
 
     if (isNotValidMessage) {
         res.sendStatus(422)
+        return
     }
 
     const message = {
