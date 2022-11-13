@@ -116,8 +116,8 @@ app.post("/status", async (req, res) => {
     const participant = req.headers.User
 
     try {
-        const isActiveParticipant = await db.collection("participants").findOne({ name: participant }).error
-        if (!isActiveParticipant) {
+        const isNotActiveParticipant = await db.collection("participants").findOne({ name: participant }).error
+        if (isNotActiveParticipant) {
             res.sendStatus(404)
         }
         await db.collection("participants").updateOne(
