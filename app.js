@@ -27,6 +27,9 @@ const participantSchema = joi.object({
     name: joi.string().required()
 })
 
+
+setInterval(rmInactiveParticipants, 15000)
+
 app.post("/participants", async (req, res) => {
     const participant = req.body
     const participantValidation = participantSchema.validate(participant)
@@ -67,16 +70,36 @@ app.post("/participants", async (req, res) => {
 
 app.get("/participants", async (req, res) => {
 
-    try{
+    try {
         const participants = await db.collection("participants").find().toArray()
         res.status(200).send(participants)
-    }catch(error){
+    } catch (error) {
         console.log(error)
         res.sendStatus(500)
     }
 
 
 })
+
+async function rmInactiveParticipants() {
+    try {
+        const cutoffTime = Date.now() - 10
+        const inactiveParticipants = await db.collection("participants").find({ lastStatus: { $lt: cutoffTime } }).toArray()
+        inactiveParticipants.forEach(async participant => {
+            const message = {
+                from: participant.name,
+                to: "Todos",
+                text: "sai na sala...",
+                type: "status",
+                time: dayjs(Date.now()).format("HH:mm:ss")
+            }
+            await db.collection("participants").deleteOne({ _id: participant._id })
+            await db.collection("messages").insertOne(message)
+        });
+    } catch (error) {
+        console.log(error)
+    }
+}
 
 
 app.listen(process.env.SERVER_PORT, () => console.log(`Server running on port ${process.env.SERVER_PORT}`));
