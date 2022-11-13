@@ -81,6 +81,30 @@ app.get("/participants", async (req, res) => {
 
 })
 
+app.post("/status", async (req, res) => {
+    const participant = req.headers.User
+
+    try {
+        const isActiveParticipant = await db.collection("participants").findOne({ name: participant }).error
+        if (!isActiveParticipant) {
+            res.sendStatus(404)
+        }
+        await db.collection("participants").updateOne(
+            {
+                name: participant
+            },
+            {
+                $set: {
+                    lastStatus: Date.now()
+                }
+            }
+        )
+        res.sendStatus(200)
+    }catch(error){
+        res.sendStatus(500)
+    }
+})
+
 async function rmInactiveParticipants() {
     try {
         const cutoffTime = Date.now() - 10
