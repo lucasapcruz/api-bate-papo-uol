@@ -27,6 +27,12 @@ const participantSchema = joi.object({
     name: joi.string().required()
 })
 
+const messageSchema = joi.object({
+    to: joi.string().required(),
+    text: joi.string().required(),
+    type: joi.string().valid("message", "private_message")
+})
+
 
 setInterval(rmInactiveParticipants, 15000)
 
@@ -81,6 +87,31 @@ app.get("/participants", async (req, res) => {
 
 })
 
+app.post("/messages", async (req, res) => {
+    const receivedMessage = req.body
+    const participant = req.headers.User
+    const isNotValidBody = messageSchema.validate(receivedMessage).error
+    const isNotActiveParticipant = await db.collection("participants").findOne({ name: participant }).error
+    const isNotValidMessage = isNotValidBody || isNotActiveParticipant
+    
+    if (isNotValidMessage) {
+        res.sendStatus(422)
+    }
+
+    const message = {
+        from: participant,
+        ...receivedMessage,
+        time: dayjs(Date.now()).format("HH:mm:ss")
+    }
+
+    try {
+        await db.collection("participants").insertOne(message)
+        res.sendStatus(201)
+    } catch (error) {
+        res.sendStatus(500)
+    }
+})
+
 app.post("/status", async (req, res) => {
     const participant = req.headers.User
 
@@ -100,7 +131,7 @@ app.post("/status", async (req, res) => {
             }
         )
         res.sendStatus(200)
-    }catch(error){
+    } catch (error) {
         res.sendStatus(500)
     }
 })
