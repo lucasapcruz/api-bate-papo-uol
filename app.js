@@ -141,13 +141,11 @@ app.get("/messages", async (req, res) => {
 
 app.post("/status", async (req, res) => {
   const participant = req.headers.user;
-  console.log(req.headers)
 
   try {
     const isActiveParticipant = await db
       .collection("participants")
       .findOne({ name: participant });
-      console.log(!isActiveParticipant)
     if (!isActiveParticipant) {
       res.sendStatus(404);
       return
