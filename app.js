@@ -84,10 +84,10 @@ app.post("/messages", async (req, res) => {
   const receivedMessage = req.body;
   const participant = req.headers.User;
   const isNotValidBody = messageSchema.validate(receivedMessage).error;
-  const isNotActiveParticipant = await db
+  const isActiveParticipant = await db
     .collection("participants")
-    .findOne({ name: participant }).error;
-  const isNotValidMessage = isNotValidBody || isNotActiveParticipant;
+    .findOne({ name: participant });
+  const isNotValidMessage = isNotValidBody || !isActiveParticipant;
 
   if (isNotValidMessage) {
     res.sendStatus(422);
@@ -140,14 +140,17 @@ app.get("/messages", async (req, res) => {
 });
 
 app.post("/status", async (req, res) => {
-  const participant = req.headers.User;
+  const participant = req.headers.user;
+  console.log(req.headers)
 
   try {
-    const isNotActiveParticipant = await db
+    const isActiveParticipant = await db
       .collection("participants")
-      .findOne({ name: participant }).error;
-    if (isNotActiveParticipant) {
+      .findOne({ name: participant });
+      console.log(!isActiveParticipant)
+    if (!isActiveParticipant) {
       res.sendStatus(404);
+      return
     }
     await db.collection("participants").updateOne(
       {
