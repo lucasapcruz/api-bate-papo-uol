@@ -82,7 +82,7 @@ app.get("/participants", async (req, res) => {
 
 app.post("/messages", async (req, res) => {
   const receivedMessage = req.body;
-  const participant = req.headers.User;
+  const participant = req.headers.user;
   const isNotValidBody = messageSchema.validate(receivedMessage).error;
   const isActiveParticipant = await db
     .collection("participants")
@@ -101,7 +101,7 @@ app.post("/messages", async (req, res) => {
   };
 
   try {
-    await db.collection("participants").insertOne(message);
+    await db.collection("messages").insertOne(message);
     res.sendStatus(201);
   } catch (error) {
     res.sendStatus(500);
@@ -168,7 +168,7 @@ app.post("/status", async (req, res) => {
 
 async function rmInactiveParticipants() {
   try {
-    const cutoffTime = Date.now() - 10;
+    const cutoffTime = Date.now() - 10000;
     const inactiveParticipants = await db
       .collection("participants")
       .find({ lastStatus: { $lt: cutoffTime } })
