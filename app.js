@@ -114,8 +114,8 @@ app.post("/messages", async (req, res) => {
 })
 
 app.get("/messages", async (req, res) => {
-    const limit = req.params.limit
-    const participant = req.headers.User
+    const limit = req.query.limit
+    const participant = req.headers.user
 
     try {
         if (limit) {
@@ -125,7 +125,7 @@ app.get("/messages", async (req, res) => {
                 }
             )
             .sort({ time: -1 })
-            .limit(limit)
+            .limit(parseInt(limit))
             .toArray()
             res.status(200).send(messages)
             return
@@ -177,7 +177,7 @@ async function rmInactiveParticipants() {
             const message = {
                 from: participant.name,
                 to: "Todos",
-                text: "sai na sala...",
+                text: "sai da sala...",
                 type: "status",
                 time: dayjs(Date.now()).format("HH:mm:ss")
             }
